@@ -53,7 +53,20 @@ function run() {
             res.send(result)
 
         })
+        app.post('/products', async (req, res) => {
+            const product = req.body;
+            console.log(product)
+            const result = await ProductsCollection.insertOne(product)
+            res.send(result)
+        })
+        app.get('/products', async (req, res) => {
+            const email = req.query.email;
 
+            const query = { email: email }
+            console.log(query)
+            const product = await ProductsCollection.find(query).toArray()
+            res.send(product)
+        })
         //  product booking
         app.post('/booking', async (req, res) => {
             const book = req.body;
