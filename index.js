@@ -274,8 +274,16 @@ function run() {
             const user = await userCollection.findOne(query)
 
 
-            res.send({ isSeller: user?.role === 'admin' })
+            res.send({ isSeller: user?.role === 'seller' })
         })
+
+        app.get('/user', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email }
+            const result = await userCollection.findOne(query);
+            res.send(result);
+        })
+
 
 
 
