@@ -12,7 +12,9 @@ app.use(express.json())
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+
 const { Stripe } = require('stripe')
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.oq7uvoj.mongodb.net/?retryWrites=true&w=majority`;
 
 
@@ -28,6 +30,8 @@ function run() {
 
         const PaymentCollection = client.db('old-market').collection('payment')
 
+        const addVCollection = client.db('old-market').collection('Advirtise')
+
         const userCollection = client.db('old-market').collection('user')
 
         // get 3 category data
@@ -36,7 +40,8 @@ function run() {
             const catagoris = await CategoryCollection.find(query).toArray();
             res.send(catagoris)
         })
-        // get 3 category data
+
+        // get category data
         app.get('/categorisBrand', async (req, res) => {
             const query = {}
             const catagoris = await CategoryCollection.find(query).project({ brand: 1 }).toArray();
@@ -55,31 +60,48 @@ function run() {
         })
         app.post('/products', async (req, res) => {
             const product = req.body;
-            console.log(product)
+
             const result = await ProductsCollection.insertOne(product)
+
+            res.send(result)
+        })
+        app.put('/products', async (req, res) => {
+            const product = req.body;
+
+            const result = await ProductsCollection.insertOne(product)
+
             res.send(result)
         })
         app.get('/products', async (req, res) => {
             const email = req.query.email;
 
             const query = { email: email }
-            console.log(query)
+
             const product = await ProductsCollection.find(query).toArray()
             res.send(product)
         })
+
+
+        app.delete('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await ProductsCollection.deleteOne(query)
+            res.send(result)
+        })
+
         //  product booking
         app.post('/booking', async (req, res) => {
             const book = req.body;
-            const query = {
-                email: book.email,
+            // const query = {
+            //     email: book.email,
 
-            }
-            const alreadyBooking = await bookingCollection.find(query).toArray()
-            if (alreadyBooking.length) {
-                const message = `already booking on ${book.itemname}`
-                return res.send({ acknowledged: false, message })
+            // }
+            // const alreadyBooking = await bookingCollection.find(query).toArray()
+            // if (alreadyBooking.length > 1) {
+            //     const message = `already booking on ${book.itemname}`
+            //     return res.send({ acknowledged: false, message })
 
-            }
+            // }
             const booking = await bookingCollection.insertOne(book)
             res.send(booking)
 
@@ -96,9 +118,9 @@ function run() {
         })
 
         app.post('/create-payment-intent', async (req, res) => {
-            const booking = req.body;
+            const booking = req.body
+            console.log(booking)
             const price = booking.price
-
             const amount = price * 100;
             const paymentIntent = await stripe.paymentIntents.create({
                 currency: 'usd',
@@ -115,9 +137,11 @@ function run() {
 
         app.post('/payment', async (req, res) => {
             const payment = req.body;
+
             const result = await PaymentCollection.insertOne(payment);
             const id = payment.bookingId;
             const filter = { _id: ObjectId(id) }
+            const options = { upsert: true }
             const updateDoc = {
                 $set: {
                     paid: true,
@@ -125,15 +149,37 @@ function run() {
                 }
 
             }
-            const update = await bookingCollection.updateOne(filter, updateDoc)
+            const update = await bookingCollection.updateOne(filter, updateDoc, options)
+            console.log(update.productId)
+
             res.send(result)
         })
+
+
+        // app.put('/product/:id', async (req, res) => {
+
+        //     const id = req.params.id
+
+        //     const filter = { _id: ObjectId(id) }
+        //     const options = { upsert: true }
+        //     const updateDoc = {
+        //         $set: {
+        //             paid: true
+
+        //         }
+
+        //     }
+        //     const update = await ProductsCollection.updateOne(filter, updateDoc, options);
+
+        //     res.send(update)
+        // })
 
         // my ordsers
         app.get('/booking', async (req, res) => {
             const email = req.query.email
             const query = { email: email }
             const alreadyBooking = await bookingCollection.find(query).toArray()
+
             res.send(alreadyBooking)
         })
 
@@ -144,7 +190,17 @@ function run() {
             res.send(allusers)
         })
 
+
         // get alll sellers
+        app.get('/users/:role', async (req, res) => {
+            const role = req.params.role
+            const query = { role: role }
+
+            const allsellers = await userCollection.find(query).toArray()
+            res.send(allsellers)
+
+        })
+
         app.get('/users/:role', async (req, res) => {
             const role = req.params.role
             const query = { role: role }
@@ -154,11 +210,45 @@ function run() {
 
 
         })
+        app.get('/user', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const products = await userCollection.findOne(query)
+            res.send(products);
+        })
+
+
+
+        // app.put('/dashboard/seller/:id', async (req, res) => {
+        //     const id = req.params.id;
+        //     const filter = { _id: ObjectId(id) };
+        //     const options = { upsert: true };
+        //     const updateDoc = {
+        //         $set: {
+        //             status: 'verify'
+        //         }
+        //     }
+        //     const result = await userCollection.updateOne(filter, updateDoc, options);
+        //     res.send(result);
+        // })
 
         app.delete('/users/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) }
             const result = await userCollection.deleteOne(query)
+            res.send(result)
+        })
+
+        app.put('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    verify: true
+                }
+            }
+            const result = await userCollection.updateOne(filter, updateDoc, options)
             res.send(result)
         })
 
@@ -175,6 +265,19 @@ function run() {
 
 
         })
+
+        app.get('/users/seller/:email', async (req, res) => {
+            const email = req.params.email;
+
+            const query = { email: email }
+
+            const user = await userCollection.findOne(query)
+
+
+            res.send({ isSeller: user?.role === 'admin' })
+        })
+
+
 
 
         // admin banano id dore
@@ -209,6 +312,56 @@ function run() {
             const result = await userCollection.insertOne(user);
             res.send(result)
         })
+
+        app.put('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    soldStatus: 'true'
+                }
+            }
+            const result = await ProductsCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
+        })
+        app.put('/product/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    advertise: 'true'
+                }
+            }
+            const result = await ProductsCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
+        })
+
+        app.get('/advertise/product', async (req, res) => {
+            const query = {
+                advertise: 'true'
+            };
+            console.log(query);
+            const category = await ProductsCollection.find(query).toArray();
+            res.send(category)
+        })
+
+        // app.put('/advirtise/:id', async (req, res) => {
+        //     const add = req.body;
+        //     console.log(add)
+        //     const id = req.query.id
+
+        //     const filter = {
+        //         _id: ObjectId(id)
+        //     }
+        //     const options = { upsert: true }
+        //     const updateDoc = {
+        //         $set: add
+        //     }
+        //     const result = await addVCollection.updateOne(filter, updateDoc, options)
+        //     res.send(result)
+        // })
 
 
     }
