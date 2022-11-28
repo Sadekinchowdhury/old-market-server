@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 require('dotenv').config()
+const jwt = require('jsonwebtoken');
 const stripe = require("stripe")(process.env.STRIPE_PAYMENT)
 const port = process.env.PORT || 5000
 
@@ -20,6 +21,30 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+
+
+
+function verifyJWT(req, res, next) {
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send('unauthorize acess')
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.DB_KEY, function (err, decoded) {
+
+        if (err) {
+            return res.status(401).send({ message: 'forribideen' })
+        }
+        req.decoded = decoded;
+
+        next();
+    })
+
+}
+
+
+
 function run() {
     try {
         const CategoryCollection = client.db('old-market').collection('Category')
@@ -33,6 +58,26 @@ function run() {
         const addVCollection = client.db('old-market').collection('Advirtise')
 
         const userCollection = client.db('old-market').collection('user')
+
+
+        app.get('/jwt', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const user = await userCollection.findOne(query);
+            console.log(user)
+
+
+            if (user) {
+                const token = jwt.sign({ email }, process.env.JWT_KEY, { expiresIn: '30D' })
+                return res.send({ accesTocken: token })
+            }
+
+            res.status(401).send({ accestokken: '' })
+        })
+
+
+
+
 
         // get 3 category data
         app.get('/categoris', async (req, res) => {
@@ -275,6 +320,17 @@ function run() {
 
 
             res.send({ isSeller: user?.role === 'seller' })
+        })
+
+        app.get('/users/buyer/:email', async (req, res) => {
+            const email = req.params.email;
+
+            const query = { email: email }
+
+            const user = await userCollection.findOne(query)
+
+
+            res.send({ isSeller: user?.role === 'buyer' })
         })
 
         app.get('/user', async (req, res) => {
