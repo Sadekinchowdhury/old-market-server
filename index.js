@@ -80,21 +80,21 @@ function run() {
 
 
         // get 3 category data
-        app.get('/categoris', verifyJWT, async (req, res) => {
+        app.get('/categoris', async (req, res) => {
             const query = {}
             const catagoris = await CategoryCollection.find(query).toArray();
             res.send(catagoris)
         })
 
         // get category data
-        app.get('/categorisBrand', verifyJWT, async (req, res) => {
+        app.get('/categorisBrand', async (req, res) => {
             const query = {}
             const catagoris = await CategoryCollection.find(query).project({ brand: 1 }).toArray();
             res.send(catagoris)
         })
 
         // get getegorywise data
-        app.get('/categoris/:id', verifyJWT, async (req, res) => {
+        app.get('/categoris/:id', async (req, res) => {
             const id = req.params.id;
             const query = {
                 category_id: id
@@ -103,7 +103,7 @@ function run() {
             res.send(result)
 
         })
-        app.post('/products', verifyJWT, async (req, res) => {
+        app.post('/products', async (req, res) => {
             const product = req.body;
 
             const result = await ProductsCollection.insertOne(product)
@@ -117,7 +117,7 @@ function run() {
 
             res.send(result)
         })
-        app.get('/products', verifyJWT, async (req, res) => {
+        app.get('/products', async (req, res) => {
             const email = req.query.email;
 
             const query = { email: email }
@@ -127,7 +127,7 @@ function run() {
         })
 
 
-        app.delete('/products/:id', verifyJWT, async (req, res) => {
+        app.delete('/products/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) }
             const result = await ProductsCollection.deleteOne(query)
@@ -135,7 +135,7 @@ function run() {
         })
 
         //  product booking
-        app.post('/booking', verifyJWT, async (req, res) => {
+        app.post('/booking', async (req, res) => {
             const book = req.body;
             // const query = {
             //     email: book.email,
@@ -152,7 +152,7 @@ function run() {
 
         })
 
-        app.get('/booking/:id', verifyJWT, async (req, res) => {
+        app.get('/booking/:id', async (req, res) => {
             const id = req.params.id;
 
             const query = { _id: ObjectId(id) }
@@ -162,7 +162,7 @@ function run() {
 
         })
 
-        app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+        app.post('/create-payment-intent', async (req, res) => {
             const booking = req.body
 
             const price = booking.price
@@ -180,7 +180,7 @@ function run() {
             })
         })
 
-        app.post('/payment', verifyJWT, async (req, res) => {
+        app.post('/payment', async (req, res) => {
             const payment = req.body;
 
             const result = await PaymentCollection.insertOne(payment);
@@ -220,7 +220,7 @@ function run() {
         // })
 
         // my ordsers
-        app.get('/booking', verifyJWT, async (req, res) => {
+        app.get('/booking', async (req, res) => {
             const email = req.query.email
             const query = { email: email }
             const alreadyBooking = await bookingCollection.find(query).toArray()
@@ -229,7 +229,7 @@ function run() {
         })
 
         // get alll users
-        app.get('/users', verifyJWT, async (req, res) => {
+        app.get('/users', async (req, res) => {
             const query = {}
             const allusers = await userCollection.find(query).toArray()
             res.send(allusers)
@@ -255,7 +255,7 @@ function run() {
 
 
         })
-        app.get('/user', verifyJWT, async (req, res) => {
+        app.get('/user', async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
             const products = await userCollection.findOne(query)
@@ -277,14 +277,14 @@ function run() {
         //     res.send(result);
         // })
 
-        app.delete('/users/:id', verifyJWT, async (req, res) => {
+        app.delete('/users/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) }
             const result = await userCollection.deleteOne(query)
             res.send(result)
         })
 
-        app.put('/users/:id', verifyJWT, async (req, res) => {
+        app.put('/users/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
             const options = { upsert: true };
@@ -311,7 +311,7 @@ function run() {
 
         })
 
-        app.get('/users/seller/:email', verifyJWT, async (req, res) => {
+        app.get('/users/seller/:email', async (req, res) => {
             const email = req.params.email;
 
             const query = { email: email }
@@ -322,7 +322,7 @@ function run() {
             res.send({ isSeller: user?.role === 'seller' })
         })
 
-        app.get('/users/buyer/:email', verifyJWT, async (req, res) => {
+        app.get('/users/buyer/:email', async (req, res) => {
             const email = req.params.email;
 
             const query = { email: email }
@@ -389,7 +389,7 @@ function run() {
             const result = await ProductsCollection.updateOne(filter, updateDoc, options);
             res.send(result);
         })
-        app.put('/product/:id', verifyJWT, async (req, res) => {
+        app.put('/product/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
             const options = { upsert: true };
@@ -402,7 +402,7 @@ function run() {
             res.send(result);
         })
 
-        app.get('/advertise/product', verifyJWT, async (req, res) => {
+        app.get('/advertise/product', async (req, res) => {
             const query = {
                 advertise: 'true'
             };
