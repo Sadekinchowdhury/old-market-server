@@ -90,6 +90,7 @@ function run() {
         app.get('/categorisBrand', async (req, res) => {
             const query = {}
             const catagoris = await CategoryCollection.find(query).project({ brand: 1 }).toArray();
+
             res.send(catagoris)
         })
 
@@ -103,16 +104,23 @@ function run() {
             res.send(result)
 
         })
+
+        // every card details page
+        app.get('/card_details/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await ProductsCollection.findOne(query)
+            res.send(result)
+
+        })
         app.post('/products', async (req, res) => {
             const product = req.body;
-
             const result = await ProductsCollection.insertOne(product)
-
             res.send(result)
         })
-        app.put('/products', async (req, res) => {
-            const product = req.body;
 
+        app.put('/products', async (req, res) => {
+            const product = req.body
             const result = await ProductsCollection.insertOne(product)
 
             res.send(result)
@@ -264,18 +272,7 @@ function run() {
 
 
 
-        // app.put('/dashboard/seller/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const filter = { _id: ObjectId(id) };
-        //     const options = { upsert: true };
-        //     const updateDoc = {
-        //         $set: {
-        //             status: 'verify'
-        //         }
-        //     }
-        //     const result = await userCollection.updateOne(filter, updateDoc, options);
-        //     res.send(result);
-        // })
+
 
         app.delete('/users/:id', async (req, res) => {
             const id = req.params.id;
@@ -372,7 +369,7 @@ function run() {
         // new user information
         app.post('/users', async (req, res) => {
             const user = req.body;
-
+            console.log(user)
             const result = await userCollection.insertOne(user);
             res.send(result)
         })
@@ -402,9 +399,10 @@ function run() {
             res.send(result);
         })
 
-        app.get('/advertise/product', async (req, res) => {
+        app.get('/advertise/product:email', async (req, res) => {
             const query = {
-                advertise: 'true'
+                advertise: 'true',
+                soldStatus: 'false'
             };
 
             const category = await ProductsCollection.find(query).toArray();
