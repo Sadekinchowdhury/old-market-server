@@ -58,6 +58,7 @@ function run() {
         const addVCollection = client.db('old-market').collection('Advirtise')
 
         const userCollection = client.db('old-market').collection('user')
+        const cartCollection = client.db('old-market').collection('cart')
 
 
         app.get('/jwt', async (req, res) => {
@@ -175,6 +176,46 @@ function run() {
 
 
         })
+        app.delete('/booking/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await bookingCollection.deleteOne(query)
+            res.send(result)
+
+
+        })
+
+        app.get('/booking/sales/today', async (req, res) => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            try {
+                const pipeline = [
+                    {
+                        $match: {
+                            soldDate: { $gte: today },
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            totalSoldToday: { $sum: '$total' },
+                        },
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            totalSoldToday: 1,
+                        },
+                    },
+                ];
+                const result = await bookingCollection.aggregate(pipeline).toArray();
+                res.json(result);
+            } catch (err) {
+                console.error('আজকের বিক্রয়ের তথ্য প্রাপ্ত করতে সমস্যা:', err);
+                res.status(500).json({ error: 'আজকের বিক্রয়ের তথ্য প্রাপ্ত করতে সমস্যা' });
+            }
+        });
+
 
         app.post('/create-payment-intent', async (req, res) => {
             const booking = req.body
@@ -240,6 +281,49 @@ function run() {
             const alreadyBooking = await bookingCollection.find(query).toArray()
 
             res.send(alreadyBooking)
+        })
+
+
+        // cart
+        app.post('/cart', async (req, res) => {
+            const query = req.body;
+            const result = await cartCollection.insertOne(query)
+
+            res.send(result)
+        })
+
+        // cart
+        app.get('/booking/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { bookingEmail: email }
+            const result = await bookingCollection.find(query).toArray()
+
+            res.send(result)
+        })
+
+        // app.delete('/booking/:id:email', async (req, res) => {
+        //     const { id, email } = req.params
+        //     console.log(id, email)
+        //     const query = { _id: ObjectId(id), bookingEmail: email }
+        //     console.log(query)
+        //     const result = await bookingCollection.deleteOne(query)
+        //     res.send(result)
+        // })
+        app.put('/booking/:id', async (req, res) => {
+            const id = req.params.id;
+            const update = req.body;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    cart: update.cartAdd,
+                    quantity: update.cart,
+                    bookingEmails: update.bookingEmail,
+
+                }
+            }
+            const result = await bookingCollection.updateMany(filter, updateDoc, options)
+            res.send(result)
         })
 
         // get alll users
@@ -430,6 +514,10 @@ function run() {
             const result = await ProductsCollection.updateOne(filter, updateDoc, options);
             res.send(result);
         })
+
+
+
+
         app.put('/product/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
