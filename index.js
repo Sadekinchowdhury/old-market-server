@@ -125,6 +125,12 @@ function run() {
 
             res.send(result)
         })
+        // all products
+        app.get('/products', async (req, res) => {
+            const query = {}
+            const result = await ProductsCollection.find(query).toArray()
+            res.send(result)
+        })
         app.get('/products', async (req, res) => {
             const email = req.query.email;
 
@@ -293,8 +299,39 @@ function run() {
             const result = await userCollection.updateOne(filter, updateDoc, options)
             res.send(result)
         })
+        app.put('/user/:id', async (req, res) => {
+            const id = req.params.id;
+            const update = req.body
+            const { name, phone, zip, city, country, adress1, adress2, image } = update
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    name, phone, zip, city, country, adress1, adress2, image
+                }
+            }
+            const result = await userCollection.updateMany(filter, updateDoc, options)
+            console.log(result)
+            res.send(result)
+        })
+
+        // app.put('/user/:email', async (req, res) => {
+        //     const email = req.params.email
+        //     const update = req.body
+        //     console.log(update)
+        //     const filter = { email: email };
+        //     const options = { upsert: true };
+        //     const updateDoc = {
+        //         $set: {
+        //             name: update.name
 
 
+        //         }
+        //     }
+        //     const result = await userCollection.updateOne(filter, updateDoc, options);
+        //     console.log(result)
+        //     res.send(result);
+        // })
 
 
         // get all buyers
@@ -331,6 +368,12 @@ function run() {
         })
 
         app.get('/user', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email }
+            const result = await userCollection.findOne(query);
+            res.send(result);
+        })
+        app.get('/user/:email', async (req, res) => {
             const email = req.query.email;
             const query = { email: email }
             const result = await userCollection.findOne(query);
@@ -373,6 +416,7 @@ function run() {
             const result = await userCollection.insertOne(user);
             res.send(result)
         })
+
 
         app.put('/products/:id', async (req, res) => {
             const id = req.params.id;
