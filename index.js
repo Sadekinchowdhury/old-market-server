@@ -58,6 +58,7 @@ function run() {
         const addVCollection = client.db('old-market').collection('Advirtise')
 
         const userCollection = client.db('old-market').collection('user')
+        const reviewCollection = client.db('old-market').collection('review')
         const cartCollection = client.db('old-market').collection('cart')
 
 
@@ -77,7 +78,26 @@ function run() {
         })
 
 
+        // review
+        app.post('/review', async (req, res) => {
+            const query = req.body
+            const result = await reviewCollection.insertOne(query)
+            res.send(result)
+        })
+        app.get('/review/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { reviewId: id }
+            const result = await reviewCollection.find(query).toArray()
+            res.send(result)
+        })
 
+        app.delete('/review/:id/:email', async (req, res) => {
+            const { id, email } = req.params
+            const query = { $or: [{ _id: id }, { userEmail: email }] };
+            const result = await reviewCollection.deleteMany(query)
+
+            res.send(result)
+        })
 
 
         // get 3 category data
