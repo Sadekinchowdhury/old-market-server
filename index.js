@@ -111,7 +111,6 @@ function run() {
         app.get('/categorisBrand', async (req, res) => {
             const query = {}
             const catagoris = await CategoryCollection.find(query).project({ brand: 1 }).toArray();
-
             res.send(catagoris)
         })
 
@@ -551,12 +550,15 @@ function run() {
             res.send(result);
         })
 
-        app.get('/advertise/product:email', async (req, res) => {
-            const query = {
-                advertise: 'true',
-                soldStatus: 'false'
-            };
+        // app.get('/product/advertise/', async (req, res) => {
+        //     const result = await ProductsCollection.find({ advertise: true }).toArray()
+        //     res.send(result);
+        // })
 
+        app.get('/advertise/product', async (req, res) => {
+            const query = {
+                advertise: 'true'
+            };
             const category = await ProductsCollection.find(query).toArray();
             res.send(category)
         })
