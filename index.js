@@ -555,6 +555,24 @@ function run() {
         //     res.send(result);
         // })
 
+        app.get('/product', async (req, res) => {
+            const { advirtise } = req.query
+            const query = {
+                advirtise: true
+            };
+            console.log(query)
+            const category = await ProductsCollection.find(query).toArray();
+            res.send(category)
+        })
+
+        app.get('/product/:email', async (req, res) => {
+            const email = req.params.email
+            const query = {
+                email: email
+            };
+            const category = await ProductsCollection.find(query).toArray();
+            res.send(category)
+        })
         app.get('/advertise/product', async (req, res) => {
             const query = {
                 advertise: 'true'
